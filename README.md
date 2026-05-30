@@ -1,2 +1,0 @@
-# VECCHEDI
-New Russian Reddit
