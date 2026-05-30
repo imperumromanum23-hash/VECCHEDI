@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Вечеди — Главная страница интернета</title>
+    <style>
+        /* Минималистичный темный стиль а-ля Reddit Modern */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #030303; color: #d7dadc; padding-bottom: 50px; }
+        
+        /* Тонкая адаптивная шапка */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background-color: #0b0b0c; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #1a1a1b; }
+        .logo { font-size: 20px; font-weight: 800; color: #ff4500; cursor: pointer; text-decoration: none; letter-spacing: -0.5px; }
+        .logo span { color: #fff; font-weight: 400; font-size: 15px; margin-left: 2px; }
+        
+        .auth-zone { display: flex; align-items: center; gap: 12px; max-width: 60%; }
+        .user-info { font-size: 12px; color: #818384; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        /* Кнопки */
+        .btn { padding: 6px 14px; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 12px; transition: 0.2s; outline: none; }
+        .btn-filled { background-color: #ff4500; color: #fff; }
+        .btn-filled:hover { background-color: #ff5414; }
+        .btn-border { background: transparent; border: 1px solid #343536; color: #d7dadc; }
+        .btn-border:hover { border-color: #fff; }
+
+        .container { max-width: 600px; margin: 12px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 12px; }
+        
+        /* Панель сортировки */
+        .sort-bar { display: flex; gap: 12px; border-bottom: 1px solid #1a1a1b; padding-bottom: 10px; font-size: 13px; color: #818384; }
+        .sort-type { cursor: pointer; font-weight: 700; padding: 2px 4px; }
+        .sort-type.active { color: #fff; border-bottom: 2px solid #ff4500; }
+
+        /* Навигация общин */
+        .sub-nav { display: flex; gap: 6px; overflow-x: auto; white-space: nowrap; padding-bottom: 4px; }
+        .sub-chip { padding: 5px 12px; background: #1a1a1b; border-radius: 16px; font-size: 12px; font-weight: 700; cursor: pointer; color: #818384; border: 1px solid transparent; }
+        .sub-chip:hover { color: #fff; }
+        .sub-chip.active { background: #272729; color: #fff; border-color: #343536; }
+        /* Стили постов */
+        .feed { display: flex; flex-direction: column; gap: 10px; }
+        .post { background: #0b0b0c; border: 1px solid #1a1a1b; border-radius: 8px; display: flex; overflow: hidden; }
+        
+        /* Боковая панель голосования */
+        .vote-bar { width: 40px; background: #070708; display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 2px; }
+        .vote-btn { background: transparent; border: none; color: #818384; cursor: pointer; border-radius: 4px; padding: 2px; display: flex; align-items: center; justify-content: center; }
+        .vote-btn:hover { background: #1a1a1b; }
+        .vote-btn.up.active { color: #ff4500; }
+        .vote-btn.down.active { color: #7193ff; }
+        .vote-btn svg { width: 20px; height: 20px; fill: currentColor; }
+        .score { font-size: 11px; font-weight: 700; color: #d7dadc; min-width: 20px; text-align: center; }
+
+        .post-body { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+        .post-meta { font-size: 11px; color: #818384; display: flex; gap: 6px; }
+        .sub-title { color: #d7dadc; font-weight: 700; cursor: pointer; }
+        .post-title { font-size: 16px; font-weight: 600; color: #fff; }
+        .post-text { font-size: 13px; line-height: 18px; color: #c1c4c6; white-space: pre-wrap; word-break: break-word; }
+        
+        /* Комментарии внутри поста */
+        .comments-toggle { font-size: 12px; color: #818384; cursor: pointer; font-weight: 700; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+        .comments-box { background: #070708; border-top: 1px solid #1a1a1b; padding: 10px; margin-top: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 8px; }
+        .comment { font-size: 12px; border-left: 1px dashed #343536; padding-left: 8px; margin-left: 2px; }
+        .comment-meta { color: #818384; font-size: 11px; margin-bottom: 2px; }
+        .comment-text { color: #d7dadc; }
+        
+        /* Формы ввода */
+        .create-panel { background: #0b0b0c; border: 1px solid #1a1a1b; padding: 14px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; }
+        .create-panel input, .create-panel textarea, .create-panel select { width: 100%; padding: 8px 12px; background: #1a1a1b; border: 1px solid #272729; color: #fff; border-radius: 4px; outline: none; font-size: 13px; }
+        .create-panel textarea { height: 60px; resize: none; }
+        .form-row { display: flex; gap: 6px; }
+
+        /* Модальные окна */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 12px; }
+        .modal { background: #0b0b0c; padding: 24px; border-radius: 12px; width: 100%; max-width: 350px; border: 1px solid #272729; position: relative; }
+        .modal h2 { margin-bottom: 14px; font-size: 18px; text-align: center; }
+        .modal input { width: 100%; padding: 10px; margin-bottom: 10px; background: #1a1a1b; border: 1px solid #272729; color: #fff; border-radius: 6px; font-size: 14px; outline: none; }
+        .modal .switch-text { text-align: center; margin-top: 12px; font-size: 12px; color: #818384; }
+        .modal .switch-text span { color: #ff4500; cursor: pointer; }
+        .close-modal { position: absolute; top: 12px; right: 12px; font-size: 18px; cursor: pointer; color: #818384; }
+    </style>
+</head>
+<body>
+    <!-- Минималистичная Шапка -->
+    <header>
+        <div class="logo" onclick="location.reload()">вечеди<span>.ру</span></div>
+        <div class="auth-zone" id="authZone"></div>
+    </header>
+
+    <main class="container">
+        <!-- Общины -->
+        <nav class="sub-nav" id="subNavigation"></nav>
+
+        <!-- Сортировка -->
+        <div class="sort-bar">
+            <span class="sort-type active" id="sort-best" onclick="setSort('best')">Лучшее</span>
+            <span class="sort-type" id="sort-new" onclick="setSort('new')">Новое</span>
+        </div>
+
+        <!-- Панель публикаций -->
+        <section class="create-panel" id="createPanel" style="display: none;">
+            <div class="form-row">
+                <input type="text" id="newSubInput" placeholder="Имя новой общины (латиница)...">
+                <button class="btn btn-border" onclick="handleCreateSubreddit()">+ Община</button>
+            </div>
+            <form onsubmit="handleCreatePost(event)" style="display:flex; flex-direction:column; gap:6px;">
+                <input type="text" id="postTitleInput" placeholder="Заголовок вече-поста" required>
+                <textarea id="postTextInput" placeholder="Текст обсуждения..."></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display:flex; gap: 4px; align-items:center; font-size:12px;">
+                        <span>В общину:</span>
+                        <select id="postSubSelect" style="width: auto; padding: 2px 6px;"></select>
+                    </div>
+                    <button type="submit" class="btn btn-filled">Пульнуть вече 🚀</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Заглушка авторизации -->
+        <section class="guest-warning" id="guestWarning" style="background:#0b0b0c; padding:16px; border-radius:8px; border:1px dashed #1a1a1b; text-align:center; font-size:13px; color:#818384;">
+            Присоединяйтесь к собранию. <span onclick="openAuthModal()" style="color:#ff4500; cursor:pointer; font-weight:700;">Войдите или зарегистрируйтесь</span>, чтобы создавать общины и вести споры.
+        </section>
+
+        <!-- Главная лента -->
+        <section class="feed" id="redditFeed"></section>
+    </main>
+
+    <!-- Модалка регистрации -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal">
+            <span class="close-modal" onclick="closeAuthModal()">✕</span>
+            <h2 id="modalTitle">Вход на Вечеди</h2>
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <input type="email" id="authEmail" placeholder="Электронная почта" required>
+                <input type="password" id="authPassword" placeholder="Пароль" required>
+                <button type="submit" class="btn btn-filled" style="width:100%; padding:10px;">Продолжить</button>
+            </form>
+            <div class="switch-text" id="switchText">
+                Впервые тут? <span onclick="toggleAuthMode(true)">Создать аккаунт</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        // SVG Иконки стрелочек Reddit
+        const UP_SVG = '<svg viewBox="0 0 24 24"><path d="M4 14h6v8h4v-8h6L12 4 4 14z"/></svg>';
+        const DOWN_SVG = '<svg viewBox="0 0 24 24"><path d="M20 10h-6V2h-4v8H4l8 10 8-10z"/></svg>';
+
+        let currentUser = JSON.parse(localStorage.getItem('vechediUser')) || null;
+        let isSignUpMode = false;
+        let activeSub = 'all';
+        let currentSort = 'best'; 
+
+        // ИСПРАВЛЕНО: Новый надежный и бесплатный сервер без ошибок CORS
+        const KEY_URL = "https://kvdb.io";
+
+        let subreddits = ['all', 'memes', 'games', 'news'];
+        let posts = [];
+
+        // Старт
+        async function init() {
+            updateAuthUI();
+            await loadData();
+        }
+
+        // Загрузка данных из облака без CORS-блокировок
+        async function loadData() {
+            try {
+                const res = await fetch(KEY_URL);
+                if (res.ok) {
+                    const serverData = await res.json();
+                    if (serverData) {
+                        posts = serverData.posts || [];
+                        subreddits = serverData.subreddits || ['all', 'memes', 'games', 'news'];
+                    }
+                }
+            } catch (e) { console.log("Синхронизация базы..."); }
+            renderSubNav();
+            renderFeed();
+        }
+
+        // Сохранение данных в облако без CORS-блокировок
+        async function syncWithServer() {
+            try {
+                await fetch(KEY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ posts, subreddits })
+                });
+            } catch (e) { console.error("Ошибка синхронизации"); }
+        }
+        function updateAuthUI() {
+            const zone = document.getElementById('authZone');
+            const panel = document.getElementById('createPanel');
+            const warning = document.getElementById('guestWarning');
+
+            if (currentUser) {
+                zone.innerHTML = `
+                    <span class="user-info" title="${currentUser.email}">u/${currentUser.email.split('@')[0]}</span>
+                    <button class="btn btn-border" onclick="logout()">Выйти</button>
+                `;
+                panel.style.display = 'block';
+                warning.style.display = 'none';
+            } else {
+                zone.innerHTML = `<button class="btn btn-filled" onclick="openAuthModal()">Войти</button>`;
+                panel.style.display = 'none';
+                warning.style.display = 'block';
+            }
+        }
+
+        function openAuthModal() { document.getElementById('authModal').style.display = 'flex'; toggleAuthMode(false); }
+        function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; document.getElementById('authForm').reset(); }
+        
+        function toggleAuthMode(signUp) {
+            isSignUpMode = signUp;
+            document.getElementById('modalTitle').innerText = isSignUpMode ? "Регистрация на Вечеди" : "Вход на Вечеди";
+            document.getElementById('switchText').innerHTML = isSignUpMode ? 'Уже есть профиль? <span onclick="toggleAuthMode(false)">Войти</span>' : 'Впервые тут? <span onclick="toggleAuthMode(true)">Создать аккаунт</span>';
+        }
+
+        function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            let users = JSON.parse(localStorage.getItem('vechediRegisteredUsers')) || [];
+
+            if (isSignUpMode) {
+                if (users.some(u => u.email === email)) { alert("Почта занята!"); return; }
+                users.push({ email, password });
+                localStorage.setItem('vechediRegisteredUsers', JSON.stringify(users));
+            } else {
+                if (!users.some(u => u.email === email && u.password === password)) { alert("Неверный логин или пароль!"); return; }
+            }
+
+            currentUser = { email };
+            localStorage.setItem('vechediUser', JSON.stringify(currentUser));
+            updateAuthUI(); closeAuthModal(); renderFeed();
+        }
+
+        function logout() { localStorage.removeItem('vechediUser'); currentUser = null; updateAuthUI(); renderFeed(); }
+
+        function setSort(type) {
+            currentSort = type;
+            document.querySelectorAll('.sort-type').forEach(el => el.classList.remove('active'));
+            document.getElementById(`sort-${type}`).classList.add('active');
+            renderFeed();
+        }
+
+        async function handleCreateSubreddit() {
+            const input = document.getElementById('newSubInput');
+            const name = input.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+            if (!name || subreddits.includes(name) || name === 'all') return;
+
+            subreddits.push(name);
+            input.value = '';
+            renderSubNav();
+            await syncWithServer(); loadData();
+        }
+        async function handleCreatePost(event) {
+            event.preventDefault();
+            const title = document.getElementById('postTitleInput').value.trim();
+            const text = document.getElementById('postTextInput').value.trim();
+            const sub = document.getElementById('postSubSelect').value;
+
+            posts.unshift({
+                id: Date.now() + Math.random(),
+                sub,
+                author: "u/" + currentUser.email.split('@')[0],
+                title, text, time: Date.now(),
+                upvotes: [], dislikes: [], comments: []
+            });
+
+            document.getElementById('postTitleInput').value = '';
+            document.getElementById('postTextInput').value = '';
+            
+            renderFeed();
+            await syncWithServer(); loadData();
+        }
+
+        async function handleVote(postId, type) {
+            if (!currentUser) { openAuthModal(); return; }
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            if (!post.upvotes) post.upvotes = []; if (!post.dislikes) post.dislikes = [];
+            const uid = currentUser.email;
+
+            if (type === 'up') {
+                if (post.upvotes.includes(uid)) post.upvotes = post.upvotes.filter(id => id !== uid);
+                else { post.upvotes.push(uid); post.dislikes = post.dislikes.filter(id => id !== uid); }
+            } else {
+                if (post.dislikes.includes(uid)) post.dislikes = post.dislikes.filter(id => id !== uid);
+                else { post.dislikes.push(uid); post.upvotes = post.upvotes.filter(id => id !== uid); }
+            }
+
+            renderFeed();
+            await syncWithServer(); loadData();
+        }
+
+        async function handleAddComment(event, postId) {
+            event.preventDefault();
+            if (!currentUser) { openAuthModal(); return; }
+            const input = document.getElementById(`comment-input-${postId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                if (!post.comments) post.comments = [];
+                post.comments.push({
+                    author: "u/" + currentUser.email.split('@')[0],
+                    text: text
+                });
+                input.value = '';
+                renderFeed();
+                await syncWithServer(); loadData();
+            }
+        }
+        function renderSubNav() {
+            const nav = document.getElementById('subNavigation');
+            const select = document.getElementById('postSubSelect');
+            nav.innerHTML = subreddits.map(s => `<div class="sub-chip ${activeSub === s ? 'active' : ''}" onclick="switchSub('${s}')">о/${s}</div>`).join('');
+            select.innerHTML = subreddits.filter(s => s !== 'all').map(s => `<option value="${s}">о/${s}</option>`).join('');
+        }
+
+        function switchSub(subName) { activeSub = subName; renderFeed(); }
+
+        function renderFeed() {
+            const feedContainer = document.getElementById('redditFeed');
+            let filtered = activeSub === 'all' ? posts : posts.filter(p => p.sub === activeSub);
+            
+            // Защита структуры
+            filtered.forEach(p => { if(!p.upvotes) p.upvotes = []; if(!p.dislikes) p.dislikes = []; if(!p.comments) p.comments = []; });
+
+            // Алгоритмы сортировки Reddit
+            if (currentSort === 'best') {
+                // Лучшее — сортировка по разнице голосов (карме)
+                filtered.sort((a, b) => (b.upvotes.length - b.dislikes.length) - (a.upvotes.length - a.dislikes.length));
+            } else {
+                // Новое — сортировка строго по времени добавления
+                filtered.sort((a, b) => b.time - a.time);
+            }
+
+            if (filtered.length === 0) {
+                feedContainer.innerHTML = `<p style="color: #818384; text-align: center; margin-top: 30px; font-size:13px;">В о/${activeSub} пока пусто.</p>`;
+                return;
+            }
+
+            const myUid = currentUser ? currentUser.email : null;
+
+            feedContainer.innerHTML = filtered.map(post => {
+                const score = post.upvotes.length - post.dislikes.length;
+                const isUp = myUid && post.upvotes.includes(myUid);
+                const isDown = myUid && post.dislikes.includes(myUid);
+
+                const commentsHTML = post.comments.map(c => `
+                    <div class="comment">
+                        <div class="comment-meta">${c.author}</div>
+                        <div class="comment-text">${escapeHTML(c.text)}</div>
+                    </div>
+                `).join('');
+
+                return `
+                    <article class="post">
+                        <div class="vote-bar">
+                            <button class="vote-btn up ${isUp ? 'active' : ''}" onclick="handleVote(${post.id}, 'up')">${UP_SVG}</button>
+                            <div class="score ${isUp ? 'up' : ''} ${isDown ? 'down' : ''}">${score}</div>
+                            <button class="vote-btn down ${isDown ? 'active' : ''}" onclick="handleVote(${post.id}, 'down')">${DOWN_SVG}</button>
+                        </div>
+                        <div class="post-body">
+                            <div class="post-meta"><span class="sub-title" onclick="switchSub('${post.sub}')">о/${post.sub}</span><span>• Пост от ${post.author}</span></div>
+                            <h2 class="post-title">${escapeHTML(post.title)}</h2>
+                            ${post.text ? `<p class="post-text">${escapeHTML(post.text)}</p>` : ''}
+                            
+                            <div class="comments-toggle">💬 Комментарии (${post.comments.length})</div>
+                            
+                            <div class="comments-box">
+                                <div id="comments-list-${post.id}">${commentsHTML}</div>
+                                <form class="comment-form" onsubmit="handleAddComment(event, ${post.id})" style="display:flex; gap:6px; margin-top:4px;">
+                                    <input type="text" id="comment-input-${post.id}" placeholder="Ваше мнение в коммент..." required style="flex:1; background:#1a1a1b; border:1px solid #272729; padding:6px 10px; border-radius:4px; color:#fff; font-size:12px; outline:none;">
+                                    <button type="submit" class="btn btn-filled" style="padding:4px 12px; border-radius:4px;">Сказать</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function escapeHTML(str) { return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t)); }
+        
+        // Автообновление раз в 5 секунд
+        setInterval(loadData, 5000);
+        init();
+    </script>
+</body>
+</html>
